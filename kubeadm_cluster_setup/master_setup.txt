@@ -1,0 +1,39 @@
+##1. Run the requirements_installation.sh to set up node with tools required
+
+## 2.  get pod networks yaml file
+wget https://docs.projectcalico.org/manifests/calico.yaml
+
+## 3.  get kubeadm configuration file
+kubeadm config print init-defaults | tee ClusterConfiguration.yaml
+
+
+## 4.  Edit configuration file
+
+# 4.1 -write command bellow in terminal to change the ip address in the configuration file
+sed -i 's/  advertiseAddress: 1.2.3.4/  advertiseAddress: 192.168.1.14/' ClusterConfiguration.yaml
+
+# 4.2 -write command bellow in terminal to Add thi to the configuration file
+
+cat <<EOF | cat >> ClusterConfiguration.yaml
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+EOF
+
+#4.3 change kuberentes version in the configuration file from v1.20.0 to v1.20.3
+
+## 5. run kubeadm init
+
+sudo kubeadm init --config=ClusterConfiguration.yaml
+
+## 6. Configure our account on the Control Plane Node to have admin access to the API server from a non-privileged account.
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+## 7. Deploy yaml file for your pod network.
+kubectl apply -f calico.yaml
+
+
