@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: {{.Release.Name }}-api
+  labels:
+    app: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - api
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: halan-api
+        image: menntullah/halan-api
+        env:
+        - name: postgres_password
+          valueFrom:
+            secretKeyRef:
+              name: {{.Release.Name }}-postgresql
+              key: postgresql-password
+        - name: postgres_username
+          value: {{.Values.postgresql.username }}
+        - name: postgres_url
+          value: {{.Release.Name }}-postgresql.default.svc.cluster.local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Release.Name }}-api-service
+spec:
+  selector:
+    app: api
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8000
+      nodePort: 32234
+
