@@ -1,0 +1,9 @@
+postgresql:
+  username: postgres
+  postgresqlPassword: ppassword
+  replicationPassword: ppassword
+  postgresqlDatabase: ips
+  persistence:
+    size: 100Mi
+  replication:
+    enabled: true
